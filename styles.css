@@ -80,3 +80,4 @@ td .fcode{color:var(--dim);font-size:11px;margin-left:6px}
 .more summary{cursor:pointer;user-select:none;color:var(--acc)}
 .more .styleText{margin-top:6px;font-size:12.5px;line-height:1.9;color:var(--dim)}
 .more .styleText b{color:#ffd479}
+.noise{color:var(--dim);opacity:.75}
