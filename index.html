@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A股量化因子有效性看板</title>
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 <script src="echarts.min.js"></script>
 </head>
 <body>
@@ -63,6 +63,8 @@
         <th data-k="t_stat">t值</th>
         <th data-k="ic_gt_002">|IC|&gt;2%</th>
         <th data-k="recent_mean">近20交易日IC</th>
+        <th data-k="wow_delta" title="近5个交易日IC均值 − 前5个交易日；灰色≈表示在噪声范围内">周环比</th>
+        <th data-k="mom_delta" title="近21个交易日IC均值 − 前21个交易日；灰色≈表示在噪声范围内">月环比</th>
         <th>方向解读</th>
       </tr></thead>
       <tbody></tbody>
@@ -83,6 +85,8 @@
     <ul>
       <li><b>IC</b>：当日截面因子值与<b>未来N个交易日</b>收益（T收盘→T+N收盘，N=1/5/20可切换）的 Spearman 秩相关；参与计算需当日截面 ≥ 300 只有效股票。</li>
       <li><b>最新IC</b> 固定为最近交易日的未来1日IC（当日盘中为上一交易日口径）；<b>ICIR</b> = IC均值/IC标准差；<b>t值</b> = ICIR×√N；IC胜率为近一年 IC&gt;0 的占比。</li>
+      <li><b>环比列</b>：周环比=最近5个交易日块IC均值 − 前一个5日块；月环比=最近21日块 − 前一个21日块（<b>非重叠</b>分块，避免相邻两期共享样本而低估变化）。噪声阈值取该因子一年内同类相邻块差 |Δ| 的95分位：未超阈值显示灰色「≈Δ」（不宜当作风向切换），超阈值才用红/绿「↑/↓Δ」。</li>
+      <li>环比读法：<b>建议以月环比为主</b>。未来20日IC自相关很强，其周环比的噪声带宽达0.2以上，单周跳动参考意义有限；想要更细腻的逐周变化可把IC周期切到「未来1日」再看环比。</li>
       <li>股票池剔除：北交所、名称含 ST/*ST/退、上市不足400自然日；停牌当日无值自然剔除。</li>
       <li>财报因子（ROE/毛利率/资产负债率/增速）按<b>公告日</b>对齐并前向填充，避免未来函数；财报数据约每7天全量刷新。</li>
       <li>本看板为<b>原始因子</b>的 RankIC，未做行业/市值中性化、未剔除涨跌停与未计交易费用；分组净值基于收盘价成交的理论假设。</li>
@@ -90,6 +94,6 @@
     </ul>
   </section>
 </main>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
