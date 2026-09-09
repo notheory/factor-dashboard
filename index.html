@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A股量化因子有效性看板</title>
+<link rel="stylesheet" href="styles.css?v=4">
+<script src="echarts.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>A股量化因子有效性看板</h1>
+    <div class="sub">全市场（剔除ST/退市/次新/北交所） · 日频 RankIC · 统计窗口近一年（<span id="win"></span>个交易日）</div>
+  </div>
+  <div class="meta">
+    <div>股票池 <b id="uniN">-</b> 只</div>
+    <div>数据区间 <b id="dateRange">-</b></div>
+    <div>最近更新 <b id="updatedAt">-</b></div>
+    <button id="updBtn" onclick="triggerUpdate()">手动更新</button>
+    <span id="updState" class="state"></span>
+  </div>
+</header>
+
+<section class="style" id="styleBanner">
+  <div class="styleTag">市场风格速览</div>
+  <div class="styleBody">
+    <div id="stylePlain" class="plain">加载中…</div>
+    <details class="more"><summary>展开统计口径版（逐维度IC与近一年对照）</summary>
+      <div id="styleText" class="styleText"></div>
+    </details>
+    <div id="styleChips" class="chips"></div>
+    <div id="styleCaveat" class="caveat"></div>
+  </div>
+</section>
+
+<nav id="catTabs">
+  <button class="tab active" data-cat="all">全部因子</button>
+  <button class="tab" data-cat="price_volume">价量类</button>
+  <button class="tab" data-cat="valuation">估值/规模类</button>
+  <button class="tab" data-cat="quality_growth">质量/成长类</button>
+  <a class="tab verifyLink" href="verify.html">🔍 数据校验</a>
+</nav>
+
+<main>
+  <section class="card wide">
+    <h2>因子有效性排名 <span class="hint">点击行查看 IC 曲线与分组收益 · 点击表头排序</span>
+      <span class="hSel">IC周期
+        <select id="hSel">
+          <option value="1">未来1日</option>
+          <option value="5">未来5日</option>
+          <option value="20" selected>未来20日</option>
+        </select>
+      </span>
+    </h2>
+    <table id="tbl">
+      <thead><tr>
+        <th data-k="name">因子</th>
+        <th data-k="last_ic">最新IC(1日)</th>
+        <th data-k="ic_mean">近1年IC均值</th>
+        <th data-k="icir">ICIR</th>
+        <th data-k="win_rate">IC胜率</th>
+        <th data-k="t_stat">t值</th>
+        <th data-k="ic_gt_002">|IC|&gt;2%</th>
+        <th data-k="recent_mean">近20交易日IC</th>
+        <th>方向解读</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="grid">
+    <div class="card"><h2 id="icTitle">IC 时间序列</h2><div id="icChart" class="chart"></div></div>
+    <div class="card"><h2 id="moTitle">月度 IC 均值</h2><div id="moChart" class="chart"></div></div>
+  </section>
+  <section class="card wide">
+    <h2 id="qTitle">五分组累计净值（每5个交易日调仓，收盘价成交，未计费用）</h2>
+    <div id="qChart" class="chart tall"></div>
+  </section>
+
+  <section class="card wide note">
+    <h2>口径与人工核对提示</h2>
+    <ul>
+      <li><b>IC</b>：当日截面因子值与<b>未来N个交易日</b>收益（T收盘→T+N收盘，N=1/5/20可切换）的 Spearman 秩相关；参与计算需当日截面 ≥ 300 只有效股票。</li>
+      <li><b>最新IC</b> 固定为最近交易日的未来1日IC（当日盘中为上一交易日口径）；<b>ICIR</b> = IC均值/IC标准差；<b>t值</b> = ICIR×√N；IC胜率为近一年 IC&gt;0 的占比。</li>
+      <li>股票池剔除：北交所、名称含 ST/*ST/退、上市不足400自然日；停牌当日无值自然剔除。</li>
+      <li>财报因子（ROE/毛利率/资产负债率/增速）按<b>公告日</b>对齐并前向填充，避免未来函数；财报数据约每7天全量刷新。</li>
+      <li>本看板为<b>原始因子</b>的 RankIC，未做行业/市值中性化、未剔除涨跌停与未计交易费用；分组净值基于收盘价成交的理论假设。</li>
+      <li>所有数字为统计结果，仅供研究参考，<b>使用前请自行抽样核对</b>（如用行情软件核对某日某股的动量值）。</li>
+    </ul>
+  </section>
+</main>
+<script src="app.js?v=4"></script>
+</body>
+</html>
