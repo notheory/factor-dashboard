@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据校验 — A股量化因子有效性看板</title>
+<link rel="stylesheet" href="styles.css?v=2">
+<script src="echarts.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>数据校验 <a href="index.html" style="font-size:13px;color:var(--acc);margin-left:12px">← 返回看板</a></h1>
+    <div class="sub">把"原始行情 → 因子值 → 截面排名 → IC"每一步中间数字展开，供人工逐项核对</div>
+  </div>
+</header>
+
+<main>
+  <section class="card wide">
+    <div class="ctrls">
+      <label>因子 <select id="fSel"></select></label>
+      <label>交易日 <select id="dSel"></select></label>
+      <label>示例股票 <input id="sInp" placeholder="如 000001.SZ" size="10"></label>
+      <label>IC周期 <select id="hSel2"><option>1</option><option>5</option><option selected>20</option></select></label>
+      <button id="goBtn" onclick="run()">计算校验</button>
+      <a id="csvLink" class="tab verifyLink" style="display:none" href="#">下载全截面CSV</a>
+      <span id="hint" class="state"></span>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>① 因子定义与单票手工重算</h2>
+      <div id="step1" class="note">选择参数后点击"计算校验"。</div>
+    </div>
+    <div class="card">
+      <h2>② 当日截面分布</h2>
+      <div id="step2" class="note"></div>
+    </div>
+  </section>
+
+  <section class="card wide">
+    <h2>③ IC 计算过程（Spearman = 因子排名与未来收益排名的Pearson相关）</h2>
+    <div id="step3" class="note"></div>
+    <div style="max-height:420px;overflow:auto;margin-top:8px">
+      <table class="icTable" id="icTbl">
+        <thead><tr><th>股票</th><th>名称</th><th>因子值</th><th>因子排名</th><th>未来收益%</th><th>收益排名</th><th>排名差d</th><th>d²</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card wide note">
+    <h2>核对指引</h2>
+    <ul>
+      <li><b>①单票重算</b>：引擎值与手工值应完全一致（误差&lt;1e-6）。中间量（如复权收盘价）可拿行情软件"前复权K线"核对。</li>
+      <li><b>②截面分布</b>：检查因子值无异常极值、样本数是否合理（≈4000+）。</li>
+      <li><b>③IC过程</b>：`Σd²` 与 Spearman 秩相关公式逐步对应；并自动与 eff.json 中该日IC值做<b>自洽性校验</b>（应显示"一致"）。</li>
+      <li>财报类因子的生效期/公告日会在①中列出，可到巨潮资讯网核对公告原文。</li>
+    </ul>
+  </section>
+</main>
+<script src="verify.js?v=3"></script>
+</body>
+</html>
