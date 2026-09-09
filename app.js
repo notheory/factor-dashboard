@@ -52,6 +52,7 @@ async function boot() {
   if (ds.length) $('#dateRange').textContent = ds[0] + ' ~ ' + ds[ds.length - 1];
   if (s.state === 'error') { const el = $('#updState'); el.textContent = '上次更新失败'; el.className = 'state err'; }
   renderStyle(s.style);
+  updateCut();
   renderTable();
   const first = sortedRows()[0];
   if (first) selectFactor(first.code);
@@ -80,13 +81,25 @@ function sortedRows() {
 }
 
 /* 环比单元格：未超出经验噪声阈值时显示灰色≈，避免把噪声读成风格切换 */
-function deltaCell(d) {
+function deltaCell(d, asOf) {
   if (!d) return '<td class="noise">-</td>';
   const beyond = !!d.beyond;
   const arrow = beyond ? (d.delta > 0 ? '↑' : '↓') : '≈';
-  const tip = `本期(近${d.win || ''}日)均值 ${d.cur} ｜ 上期 ${d.prev} ｜ 变化 ${d.delta}；` +
-    `噪声阈值 |Δ|≥${d.noise95} → ${beyond ? '已超出，可视为真实变化' : '未超出，属噪声区间'}`;
+  const tip = `本期(最近${d.win}个交易日)IC均值 ${d.cur} ｜ 上期 ${d.prev} ｜ 环比 ${d.delta}` +
+    `；噪声阈值 |Δ|≥${d.noise95} → ${beyond ? '已超出，可视为真实变化' : '未超出，属噪声区间'}` +
+    (asOf ? `；数据截至 ${asOf}（${d.win}日口径需等未来收益实现，实际截止更早）` : '');
   return `<td class="${beyond ? cls(d.delta) : 'noise'}" title="${esc(tip)}">${arrow}${fmt(Math.abs(d.delta), 4)}</td>`;
+}
+
+function updateCut() {
+  const el = $('#hCut');
+  if (!el || !SUMMARY) return;
+  let mx = '';
+  for (const f of SUMMARY.factors) {
+    const s = (f.stats_h || {})[curH];
+    if (s && s.last_date && s.last_date > mx) mx = s.last_date;
+  }
+  el.textContent = mx ? `本口径IC数据截至 ${mx}（未来${curH}日收益需已实现，故滞后于盘面）` : '';
 }
 
 function renderTable() {
@@ -105,8 +118,8 @@ function renderTable() {
       <td>${fmt(s.t_stat, 2)}</td>
       <td>${fmt((s.ic_gt_002 || 0) * 100, 1)}%</td>
       <td class="${cls(s.recent_mean)}">${fmt(s.recent_mean, 4)}</td>
-      ${deltaCell(s.wow)}
-      ${deltaCell(s.mom)}
+      ${deltaCell(s.wow, s.last_date)}
+      ${deltaCell(s.mom, s.last_date)}
       <td style="text-align:left;color:var(--dim);font-size:11.5px;max-width:220px;white-space:normal">${r.desc}</td>`;
     tr.onclick = () => selectFactor(r.code);
     tb.appendChild(tr);
@@ -191,6 +204,7 @@ document.querySelectorAll('.tab').forEach(b => {
 // IC 周期切换
 $('#hSel').onchange = () => {
   curH = +$('#hSel').value;
+  updateCut();
   renderTable();
   if (curFactor) selectFactor(curFactor);
 };
@@ -215,6 +229,7 @@ function poll() {
       $('#updBtn').disabled = false; clearInterval(t);
       const [sm, ef] = await Promise.all([fetch('api/summary.json').then(r => r.json()), fetch('api/eff.json').then(r => r.json())]);
       SUMMARY = sm; EFF = ef;
+      updateCut();
       $('#uniN').textContent = sm.universe_n; $('#updatedAt').textContent = sm.updated_at;
       renderTable();
     } else if (s.state === 'error') {
