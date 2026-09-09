@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A股量化因子有效性看板</title>
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
 <script src="echarts.min.js"></script>
 </head>
 <body>
@@ -44,7 +44,7 @@
 
 <main>
   <section class="card wide">
-    <h2>因子有效性排名 <span class="hint">点击行查看 IC 曲线与分组收益 · 点击表头排序</span>
+    <h2>因子有效性排名 <span class="hint">点击行查看 IC 曲线与分组收益 · 点击表头排序 · <span id="hCut"></span></span>
       <span class="hSel">IC周期
         <select id="hSel">
           <option value="1">未来1日</option>
@@ -94,6 +94,6 @@
     </ul>
   </section>
 </main>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
