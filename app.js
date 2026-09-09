@@ -67,14 +67,26 @@ function sortedRows() {
   const val = r => {
     if (k === 'name') return r.name;
     if (k === 'last_ic') return r.last_ic ?? -9;
-    const s = (r.stats_h || {})[curH];
-    return s ? s[k] : -9;
+    const s = (r.stats_h || {})[curH] || {};
+    if (k === 'wow_delta') return s.wow ? s.wow.delta : -9;
+    if (k === 'mom_delta') return s.mom ? s.mom.delta : -9;
+    return s[k] ?? -9;
   };
   return rowsData().slice().sort((a, b) => {
     const va = val(a), vb = val(b);
     const c = typeof va === 'string' ? va.localeCompare(vb) : (va - vb);
     return sortAsc ? c : -c;
   });
+}
+
+/* 环比单元格：未超出经验噪声阈值时显示灰色≈，避免把噪声读成风格切换 */
+function deltaCell(d) {
+  if (!d) return '<td class="noise">-</td>';
+  const beyond = !!d.beyond;
+  const arrow = beyond ? (d.delta > 0 ? '↑' : '↓') : '≈';
+  const tip = `本期(近${d.win || ''}日)均值 ${d.cur} ｜ 上期 ${d.prev} ｜ 变化 ${d.delta}；` +
+    `噪声阈值 |Δ|≥${d.noise95} → ${beyond ? '已超出，可视为真实变化' : '未超出，属噪声区间'}`;
+  return `<td class="${beyond ? cls(d.delta) : 'noise'}" title="${esc(tip)}">${arrow}${fmt(Math.abs(d.delta), 4)}</td>`;
 }
 
 function renderTable() {
@@ -93,6 +105,8 @@ function renderTable() {
       <td>${fmt(s.t_stat, 2)}</td>
       <td>${fmt((s.ic_gt_002 || 0) * 100, 1)}%</td>
       <td class="${cls(s.recent_mean)}">${fmt(s.recent_mean, 4)}</td>
+      ${deltaCell(s.wow)}
+      ${deltaCell(s.mom)}
       <td style="text-align:left;color:var(--dim);font-size:11.5px;max-width:220px;white-space:normal">${r.desc}</td>`;
     tr.onclick = () => selectFactor(r.code);
     tb.appendChild(tr);
