@@ -12,6 +12,7 @@ function renderStyle(st) {
   const banner = $('#styleBanner');
   if (!st) { if (banner) banner.style.display = 'none'; return; }
   if ($('#stylePlain')) $('#stylePlain').innerHTML = st.text_plain || st.text || '';
+  if ($('#stylePlainDetail')) $('#stylePlainDetail').innerHTML = st.text_plain_detail || '';
   if ($('#styleText')) $('#styleText').innerHTML = st.text || '';
   if ($('#styleCaveat')) $('#styleCaveat').textContent = st.caveat || '';
   const chips = (st.signals || []).slice().sort((a, b) => Math.abs(b.recent) - Math.abs(a.recent));
