@@ -1,7 +1,7 @@
 /* A股量化因子有效性看板 前端逻辑 */
 let SUMMARY = null, EFF = null;
 let curCat = 'all', curFactor = null, sortKey = 'icir', sortAsc = false, curH = 20;
-let icChart, moChart, qChart;
+let icChart, moChart, qChart, quadChart;
 
 const $ = s => document.querySelector(s);
 const fmt = (v, n = 3) => (v === null || v === undefined || isNaN(v)) ? '-' : (+v).toFixed(n);
@@ -28,7 +28,8 @@ function initCharts() {
   icChart = echarts.init($('#icChart'));
   moChart = echarts.init($('#moChart'));
   qChart = echarts.init($('#qChart'));
-  window.addEventListener('resize', () => { icChart.resize(); moChart.resize(); qChart.resize(); });
+  if ($('#quadChart')) quadChart = echarts.init($('#quadChart'));
+  window.addEventListener('resize', () => { icChart.resize(); moChart.resize(); qChart.resize(); if (quadChart) quadChart.resize(); });
 }
 const AX = { axisLine: { lineStyle: { color: '#2a3450' } }, axisLabel: { color: '#8b95b5', fontSize: 11 } };
 const base = {
@@ -54,6 +55,7 @@ async function boot() {
   renderStyle(s.style);
   updateCut();
   renderTable();
+  renderQuad();
   const first = sortedRows()[0];
   if (first) selectFactor(first.code);
 }
@@ -71,6 +73,11 @@ function sortedRows() {
     const s = (r.stats_h || {})[curH] || {};
     if (k === 'wow_delta') return s.wow ? s.wow.delta : -9;
     if (k === 'mom_delta') return s.mom ? s.mom.delta : -9;
+    const ns = (r.nstats_h || {})[curH] || {};
+    if (k === 'n_ic_mean') return ns.ic_mean ?? -9;
+    if (k === 'n_icir') return ns.icir ?? -9;
+    if (k === 'keep') return keepRatio(r) ?? -9;
+    if (k === 'crowd') return (r.crowd && r.crowd.score) ?? -9;
     return s[k] ?? -9;
   };
   return rowsData().slice().sort((a, b) => {
@@ -89,6 +96,33 @@ function deltaCell(d, asOf) {
     `；噪声阈值 |Δ|≥${d.noise95} → ${beyond ? '已超出，可视为真实变化' : '未超出，属噪声区间'}` +
     (asOf ? `；数据截至 ${asOf}（${d.win}日口径需等未来收益实现，实际截止更早）` : '');
   return `<td class="${beyond ? cls(d.delta) : 'noise'}" title="${esc(tip)}">${arrow}${fmt(Math.abs(d.delta), 4)}</td>`;
+}
+
+function keepRatio(r) {
+  const o = ((r.stats_h || {})[curH] || {}).ic_mean, n = ((r.nstats_h || {})[curH] || {}).ic_mean;
+  if (o === undefined || n === undefined || o === null || n === null || Math.abs(o) < 1e-6) return null;
+  return n / o;
+}
+
+function keepCell(r) {
+  const k = keepRatio(r);
+  if (k === null || !isFinite(k)) return '<td class="na sep">不适用</td>';
+  const pc = k * 100;
+  const c = pc >= 100 ? 'keep-hi' : (pc < 40 ? 'keep-lo' : '');
+  const tip = '中性IC均值 ÷ 原始IC均值 = ' + pc.toFixed(0) + '%；<0 表示方向被反转（原始IC基本全靠暴露）';
+  return `<td class="${c}" title="${esc(tip)}">${pc.toFixed(0)}%</td>`;
+}
+
+function crowdCell(cd) {
+  if (!cd || cd.score === null || cd.score === undefined) return '<td class="na sep">-</td>';
+  const v = cd.score;
+  const c = v >= 80 ? 'crowd-hi' : (v >= 60 ? 'crowd-mid' : 'crowd-lo');
+  const rk = cd.rank || {};
+  const tip = '拥挤度 ' + v + '（越高越挤）｜多头组=' + (cd.long_side || '') +
+    '｜定价分位' + (rk.valuation ?? '-') + ' 资金分位' + (rk.money ?? '-') +
+    ' 关注度分位' + (rk.attention ?? '-') + ' 风险分位' + (rk.risk ?? '-') +
+    '｜四维为历史分位，>80 提示极端定价/资金集中';
+  return `<td class="${c} sep" title="${esc(tip)}">${v.toFixed(0)}</td>`;
 }
 
 function updateCut() {
@@ -110,6 +144,7 @@ function renderTable() {
   for (const r of sortedRows()) {
     const s = (r.stats_h || {})[curH] || {};
     const li = (r.last_ic_h || {})[curH] || {};
+    const ns = (r.nstats_h || {})[curH] || {};
     const tr = document.createElement('tr');
     if (r.code === curFactor) tr.classList.add('sel');
     tr.innerHTML = `
@@ -123,6 +158,10 @@ function renderTable() {
       <td class="${cls(s.recent_mean)}">${fmt(s.recent_mean, 4)}</td>
       ${deltaCell(s.wow, s.last_date)}
       ${deltaCell(s.mom, s.last_date)}
+      <td class="${cls(ns.ic_mean)} sep">${fmt(ns.ic_mean, 4)}</td>
+      <td class="${cls(ns.icir)}">${fmt(ns.icir)}</td>
+      ${keepCell(r)}
+      ${crowdCell(r.crowd)}
       <td style="text-align:left;color:var(--dim);font-size:11.5px;max-width:220px;white-space:normal">${r.desc}</td>`;
     tr.onclick = () => selectFactor(r.code);
     tb.appendChild(tr);
@@ -196,6 +235,41 @@ function selectFactor(code) {
   }, true);
 }
 
+/* 拥挤度 × IC月环比 四象限：右上=拥挤且仍在增强，右下=拥挤且衰减（最危险） */
+function renderQuad() {
+  if (!quadChart || !SUMMARY) return;
+  const catColor = { price_volume: '#5b8cff', valuation: '#3ecf8e', quality_growth: '#d9a05b' };
+  const pts = [];
+  for (const r of SUMMARY.factors) {
+    if (!r.has_data || !r.crowd || r.crowd.score === null) continue;
+    const s = (r.stats_h || {})[curH] || {};
+    const ns = (r.nstats_h || {})[curH] || {};
+    if (!s.mom) continue;
+    pts.push({
+      value: [r.crowd.score, s.mom.delta, Math.min(28, 6 + Math.abs(ns.icir || s.icir || 0) * 12)],
+      name: r.name, cat: r.category, code: r.code, icir: ns.icir ?? s.icir,
+      itemStyle: { color: catColor[r.category], opacity: .85 },
+      crowd: r.crowd
+    });
+  }
+  quadChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { formatter: p => {
+      const d = p.data;
+      return `<b>${d.name}</b><br/>拥挤度 ${d.value[0]}（${d.crowd.long_side}为多头）<br/>月环比IC ${d.value[1]>0?'+':''}${d.value[1].toFixed(4)}<br/>中性ICIR ${d.icir===null?'-':(+d.icir).toFixed(2)}<br/>四维分位 定价${d.crowd.rank.valuation} 资金${d.crowd.rank.money} 关注${d.crowd.rank.attention} 风险${d.crowd.rank.risk}`;
+    } },
+    grid: { left: 55, right: 25, top: 30, bottom: 45 },
+    xAxis: { name: '拥挤度', min: 0, max: 100, ...AX, splitLine: { lineStyle: { color: '#232c45' } } },
+    yAxis: { name: 'IC月环比', ...AX, splitLine: { lineStyle: { color: '#232c45' } } },
+    series: [{
+      type: 'scatter', symbolSize: v => v[2], data: pts,
+      markLine: { silent: true, symbol: 'none', lineStyle: { color: '#8b95b5', type: 'dashed' },
+        data: [{ xAxis: 60 }, { yAxis: 0 }],
+        label: { color: '#8b95b5', fontSize: 10, formatter: p => p.name || '' } }
+    }]
+  }, true);
+}
+
 // 分类 tab
 document.querySelectorAll('.tab').forEach(b => {
   b.onclick = () => {
@@ -211,6 +285,7 @@ $('#hSel').onchange = () => {
   curH = +$('#hSel').value;
   updateCut();
   renderTable();
+  renderQuad();
   if (curFactor) selectFactor(curFactor);
 };
 
@@ -235,6 +310,7 @@ function poll() {
       const [sm, ef] = await Promise.all([fetch('api/summary.json').then(r => r.json()), fetch('api/eff.json').then(r => r.json())]);
       SUMMARY = sm; EFF = ef;
       updateCut();
+      renderQuad();
       $('#uniN').textContent = sm.universe_n; $('#updatedAt').textContent = sm.updated_at;
       renderTable();
     } else if (s.state === 'error') {
