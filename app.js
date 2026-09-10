@@ -87,17 +87,6 @@ function sortedRows() {
   });
 }
 
-/* 环比单元格：未超出经验噪声阈值时显示灰色≈，避免把噪声读成风格切换 */
-function deltaCell(d, asOf) {
-  if (!d) return '<td class="noise">-</td>';
-  const beyond = !!d.beyond;
-  const arrow = beyond ? (d.delta > 0 ? '↑' : '↓') : '≈';
-  const tip = `本期(最近${d.win}个交易日)IC均值 ${d.cur} ｜ 上期 ${d.prev} ｜ 环比 ${d.delta}` +
-    `；噪声阈值 |Δ|≥${d.noise95} → ${beyond ? '已超出，可视为真实变化' : '未超出，属噪声区间'}` +
-    (asOf ? `；数据截至 ${asOf}（${d.win}日口径需等未来收益实现，实际截止更早）` : '');
-  return `<td class="${beyond ? cls(d.delta) : 'noise'}" title="${esc(tip)}">${arrow}${fmt(Math.abs(d.delta), 4)}</td>`;
-}
-
 function keepRatio(r) {
   const o = ((r.stats_h || {})[curH] || {}).ic_mean, n = ((r.nstats_h || {})[curH] || {}).ic_mean;
   if (o === undefined || n === undefined || o === null || n === null || Math.abs(o) < 1e-6) return null;
@@ -109,7 +98,7 @@ function keepCell(r) {
   if (k === null || !isFinite(k)) return '<td class="na sep">不适用</td>';
   const pc = k * 100;
   const c = pc >= 100 ? 'keep-hi' : (pc < 40 ? 'keep-lo' : '');
-  const tip = '中性IC均值 ÷ 原始IC均值 = ' + pc.toFixed(0) + '%；<0 表示方向被反转（原始IC基本全靠暴露）';
+  const tip = '中性IC均值 ÷ 原始IC均值 = ' + pc.toFixed(0) + '%；负值表示中性化后方向被反转（原始IC基本来自规模/行业暴露）';
   return `<td class="${c}" title="${esc(tip)}">${pc.toFixed(0)}%</td>`;
 }
 
@@ -121,8 +110,20 @@ function crowdCell(cd) {
   const tip = '拥挤度 ' + v + '（越高越挤）｜多头组=' + (cd.long_side || '') +
     '｜定价分位' + (rk.valuation ?? '-') + ' 资金分位' + (rk.money ?? '-') +
     ' 关注度分位' + (rk.attention ?? '-') + ' 风险分位' + (rk.risk ?? '-') +
-    '｜四维为历史分位，>80 提示极端定价/资金集中';
+    '｜四维均为自身历史分位';
   return `<td class="${c} sep" title="${esc(tip)}">${v.toFixed(0)}</td>`;
+}
+
+/* 环比单元格：未超出经验噪声阈值时显示灰色≈，避免把噪声读成风格切换 */
+function deltaCell(d, asOf) {
+  if (!d) return '<td class="noise sep-none">-</td>';
+  const beyond = !!d.beyond;
+  const v = (d.delta > 0 ? '+' : '') + (+d.delta).toFixed(4);
+  const mark = beyond ? (d.delta > 0 ? '↑' : '↓') : '≈';
+  const tip = `本期(最近${d.win}个交易日)IC均值 ${d.cur} ｜ 上期 ${d.prev} ｜ 环比 ${d.delta}` +
+    `；噪声阈值 |Δ|≥${d.noise95} → ${beyond ? '已超出，可视为真实变化' : '未超出，属噪声区间'}` +
+    (asOf ? `；数据截至 ${asOf}` : '');
+  return `<td class="${beyond ? cls(d.delta) : 'noise'}" title="${esc(tip)}">${mark}${v}</td>`;
 }
 
 function updateCut() {
