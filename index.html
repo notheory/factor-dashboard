@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A股量化因子有效性看板</title>
-<link rel="stylesheet" href="styles.css?v=7">
+<link rel="stylesheet" href="styles.css?v=8">
 <script src="echarts.min.js"></script>
 </head>
 <body>
@@ -63,8 +63,12 @@
         <th data-k="t_stat">t值</th>
         <th data-k="ic_gt_002">|IC|&gt;2%</th>
         <th data-k="recent_mean">近20交易日IC</th>
-        <th data-k="wow_delta" title="近5个交易日IC均值 − 前5个交易日；灰色≈表示在噪声范围内">周环比</th>
-        <th data-k="mom_delta" title="近21个交易日IC均值 − 前21个交易日；灰色≈表示在噪声范围内">月环比</th>
+        <th data-k="wow_delta" title="近5个交易日块IC均值 − 前一个5日块；灰色≈表示在噪声范围内">周环比</th>
+        <th data-k="mom_delta" title="近21个交易日块IC均值 − 前一个21日块；灰色≈表示在噪声范围内">月环比</th>
+        <th data-k="n_ic_mean" class="sep" title="剔除规模与行业暴露后的同口径IC均值">中性IC均值</th>
+        <th data-k="n_icir" title="中性化后ICIR">中性ICIR</th>
+        <th data-k="keep" title="中性IC均值÷原始IC均值：>100% 行业内仍有独立信息；<40% 说明原始IC主要由规模/行业暴露借来">IC保留率</th>
+        <th data-k="crowd" class="sep" title="定价/资金/关注度/风险四维历史分位合成(0-100)；多头组方向按IC符号确定">拥挤度</th>
         <th>方向解读</th>
       </tr></thead>
       <tbody></tbody>
@@ -78,6 +82,11 @@
   <section class="card wide">
     <h2 id="qTitle">五分组累计净值（每5个交易日调仓，收盘价成交，未计费用）</h2>
     <div id="qChart" class="chart tall"></div>
+  </section>
+
+  <section class="card wide">
+    <h2>拥挤度 × IC月环比 四象限 <span class="hint">x=拥挤度(0-100，越高越挤) · y=月环比IC变化 · 点大小=|中性ICIR| · 颜色=类别</span></h2>
+    <div id="quadChart" class="chart tall"></div>
   </section>
 
   <section class="card wide note">
@@ -94,6 +103,6 @@
     </ul>
   </section>
 </main>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>
