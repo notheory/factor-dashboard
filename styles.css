@@ -92,3 +92,17 @@ td.sep{border-left:1px solid var(--line)}
 .crowd-mid{color:var(--tx)}
 .crowd-lo{color:var(--dim)}
 .na{color:var(--dim);opacity:.6}
+
+/* 风格速览：先定调后细项 */
+.lede{font-size:14.5px;line-height:1.95;margin-bottom:6px}
+.lede b{color:#ffd479}
+.lede2{font-size:13px;color:var(--tx);margin-bottom:4px}
+.subline{font-size:12.5px;color:var(--dim);line-height:1.8;margin-bottom:6px}
+.subline b{color:var(--tx)}
+.plist{list-style:none;display:grid;gap:5px;margin:6px 0 4px;padding:0}
+.plist li{font-size:13px;line-height:1.7;border-left:2px solid var(--line);padding-left:9px}
+.plist li>b{color:var(--tx)}
+.pdim{display:block;font-size:11.5px;color:var(--dim);margin-top:1px}
+.pwhy{display:block;font-size:12.5px;color:#b9c4e2;margin-top:1px}
+.vgline{font-size:12.5px;color:var(--dim);margin-top:4px}
+.ptail{font-size:11px;color:var(--dim);opacity:.8;margin-top:6px;line-height:1.6}
