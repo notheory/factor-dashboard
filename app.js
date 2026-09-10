@@ -67,7 +67,7 @@ function sortedRows() {
   const k = sortKey;
   const val = r => {
     if (k === 'name') return r.name;
-    if (k === 'last_ic') return r.last_ic ?? -9;
+    if (k === 'last_ic') { const li = (r.last_ic_h || {})[curH]; return li ? li.ic : -9; }
     const s = (r.stats_h || {})[curH] || {};
     if (k === 'wow_delta') return s.wow ? s.wow.delta : -9;
     if (k === 'mom_delta') return s.mom ? s.mom.delta : -9;
@@ -100,6 +100,8 @@ function updateCut() {
     if (s && s.last_date && s.last_date > mx) mx = s.last_date;
   }
   el.textContent = mx ? `本口径IC数据截至 ${mx}（未来${curH}日收益需已实现，故滞后于盘面）` : '';
+  const th = document.querySelector('#tbl thead th[data-k="last_ic"]');
+  if (th) th.textContent = `最新IC(${curH}日)`;
 }
 
 function renderTable() {
@@ -107,11 +109,12 @@ function renderTable() {
   tb.innerHTML = '';
   for (const r of sortedRows()) {
     const s = (r.stats_h || {})[curH] || {};
+    const li = (r.last_ic_h || {})[curH] || {};
     const tr = document.createElement('tr');
     if (r.code === curFactor) tr.classList.add('sel');
     tr.innerHTML = `
       <td><span class="catLabel">${r.category_name}</span><span class="fname">${r.name}</span><span class="fcode">${r.code}</span></td>
-      <td class="${cls(r.last_ic)}">${fmt(r.last_ic, 4)}</td>
+      <td class="${cls(li.ic)}" title="${esc('本口径(未来'+curH+'日)最新IC · '+(li.d||''))}">${fmt(li.ic, 4)}</td>
       <td class="${cls(s.ic_mean)}">${fmt(s.ic_mean, 4)}</td>
       <td class="${cls(s.icir)}">${Math.abs(s.icir) >= 0.5 ? '<span class="good">' : ''}${fmt(s.icir)}${Math.abs(s.icir) >= 0.5 ? '</span>' : ''}</td>
       <td>${fmt((s.win_rate || 0) * 100, 1)}%</td>
@@ -138,7 +141,9 @@ function selectFactor(code) {
   curFactor = code;
   const meta = SUMMARY.factors.find(f => f.code === code);
   const hn = { 1: '未来1日', 5: '未来5日', 20: '未来20日' }[curH];
-  $('#icTitle').textContent = `IC 时间序列 — ${meta.name}（${hn}收益口径，蓝线=20日均线）`;
+  const _ser = (EFF[code] && EFF[code]['ic_series_' + curH]) || [];
+  const _end = _ser.length ? _ser[_ser.length - 1].d : '';
+  $('#icTitle').textContent = `IC 时间序列 — ${meta.name}（${hn}口径 · 曲线右端即最新可算日 ${_end}，蓝线=20日均线）`;
   $('#moTitle').textContent = `月度 IC 均值 — ${meta.name}（${hn}口径）`;
   $('#qTitle').textContent = `五分组累计净值 — ${meta.name}（${meta.category_name}）`;
   renderTable();
