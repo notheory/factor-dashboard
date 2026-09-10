@@ -81,3 +81,14 @@ td .fcode{color:var(--dim);font-size:11px;margin-left:6px}
 .more .styleText{margin-top:6px;font-size:12.5px;line-height:1.9;color:var(--dim)}
 .more .styleText b{color:#ffd479}
 .noise{color:var(--dim);opacity:.75}
+
+table{table-layout:auto}
+.card.wide{overflow-x:auto}
+th.sep{border-left:1px solid var(--line)}
+td.sep{border-left:1px solid var(--line)}
+.keep-hi{color:#ffd479;font-weight:600}
+.keep-lo{color:var(--dim)}
+.crowd-hi{color:#ff9d5c;font-weight:600}
+.crowd-mid{color:var(--tx)}
+.crowd-lo{color:var(--dim)}
+.na{color:var(--dim);opacity:.6}
