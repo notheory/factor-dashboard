@@ -106,3 +106,18 @@ td.sep{border-left:1px solid var(--line)}
 .pwhy{display:block;font-size:12.5px;color:#b9c4e2;margin-top:1px}
 .vgline{font-size:12.5px;color:var(--dim);margin-top:4px}
 .ptail{font-size:11px;color:var(--dim);opacity:.8;margin-top:6px;line-height:1.6}
+
+/* 多周期分层风格总结 */
+.layer{margin-bottom:9px}
+.ltitle{font-size:12.5px;color:var(--acc);font-weight:600;margin-bottom:3px;letter-spacing:.3px}
+.lsub{font-size:13px;line-height:1.85;margin:2px 0}
+.lsub b{color:#ffd479}
+.lul{margin:2px 0 2px 18px;padding:0}
+.lul li{font-size:12.5px;line-height:1.75;color:#cdd6ef;list-style:disc}
+.lul li b{color:var(--tx)}
+.lrisk{color:#ffb08a}
+.lrisk b{color:#ff9d5c}
+.fake{color:var(--dim);font-size:11.5px}
+.lwk{color:#a9b6d9;font-size:12.5px}
+.ldate{color:var(--dim);font-size:11.5px}
+.lsub .fake{color:var(--dim)}
