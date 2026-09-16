@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A股量化因子有效性看板</title>
-<link rel="stylesheet" href="styles.css?v=11">
+<link rel="stylesheet" href="styles.css?v=12">
 <script src="echarts.min.js"></script>
 </head>
 <body>
@@ -83,7 +83,7 @@
     <div class="card"><h2 id="moTitle">月度 IC 均值</h2><div id="moChart" class="chart"></div></div>
   </section>
   <section class="card wide">
-    <h2 id="qTitle">五分组累计净值（每5个交易日调仓，收盘价成交，未计费用）</h2>
+    <h2 id="qTitle">五分组累计净值</h2><div class="qsub" id="qSub"></div>
     <div id="qChart" class="chart tall"></div>
   </section>
 
@@ -110,6 +110,6 @@
     </ul>
   </section>
 </main>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
