@@ -128,3 +128,4 @@ td.sep{border-left:1px solid var(--line)}
 .fresh b{color:#9fd0ff}
 .ltitle{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .lag{font-size:11px;color:var(--dim);font-weight:400}
+.qsub{font-size:11.5px;color:var(--dim);margin:-4px 0 8px}
