@@ -186,7 +186,11 @@ function selectFactor(code) {
   const _end = _ser.length ? _ser[_ser.length - 1].d : '';
   $('#icTitle').textContent = `IC 时间序列 — ${meta.name}（${hn}口径 · 曲线右端即最新可算日 ${_end}，蓝线=20日均线）`;
   $('#moTitle').textContent = `月度 IC 均值 — ${meta.name}（${hn}口径）`;
+  const _q = (EFF[code] && EFF[code]['quantile_' + curH]) || {};
+  const _n = (_q.long_short || []).length;
   $('#qTitle').textContent = `五分组累计净值 — ${meta.name}（${meta.category_name}）`;
+  $('#qSub').textContent = `当前口径：未来${curH}日收益 · 每${curH}个交易日调仓（非重叠持有）· 调仓次数 ${_n}` +
+    (curH >= 20 ? '（样本点较少，趋势仅供参考）' : (curH === 1 ? '（换仓极频繁，未计交易费用，实盘需大幅折价看待）' : ''));
   renderTable();
   const e = EFF[code];
   if (!e) return;
@@ -218,8 +222,8 @@ function selectFactor(code) {
       itemStyle: { color: p => p.value >= 0 ? '#c25656' : '#3ecf8e' },
       label: { show: true, position: 'outside', color: '#8b95b5', fontSize: 10, formatter: p => p.value.toFixed(3) } }]
   }, true);
-  // 分组净值
-  const q = e.quantile || {};
+  // 分组净值（随IC周期切换：调仓周期=持有期）
+  const q = e['quantile_' + curH] || {};
   const names = { Q1: '第1组(低值)', Q2: '第2组', Q3: '第3组', Q4: '第4组', Q5: '第5组(高值)', long_short: '多空(1-5组)' };
   const colors = { Q1: '#3ecf8e', Q2: '#7fb069', Q3: '#8b95b5', Q4: '#d9a05b', Q5: '#c25656', long_short: '#5b8cff' };
   const xq = (q.Q1 && q.Q1.length ? q.Q1 : (q.long_short || [])).map(p => p.d);
