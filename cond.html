@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>因子适用域（多因子条件）— A股量化因子有效性看板</title>
+<link rel="stylesheet" href="styles.css?v=13">
+<script src="echarts.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>因子适用域 · 多因子条件看板</h1>
+    <div class="sub">回答「某个因子在哪类股票池里更管用」 · 定位是<b style="color:#ffd479">市场冷暖参考</b>，不作为信号源</div>
+  </div>
+  <div class="meta">
+    <div><a href="index.html" style="color:var(--acc)">← 返回单因子看板</a></div>
+    <div>计算截至 <b id="asOf">-</b></div>
+    <div>刷新 <b id="genAt">-</b></div>
+  </div>
+</header>
+
+<main>
+  <section class="style">
+    <div class="styleTag">可信度前置</div>
+    <div class="styleBody">
+      <div class="fresh" id="credNote"></div>
+      <div id="summaryLine" class="plain"></div>
+    </div>
+  </section>
+
+  <section class="card wide">
+    <h2>适用域结论 <span class="hint">仅列出前后半样本均复现的配对；同轴=同一风格轴互为条件，信息量低</span></h2>
+    <div id="cards" class="cards"></div>
+  </section>
+
+  <section class="card wide">
+    <h2>条件IC矩阵 <span class="hint">纵轴=条件因子（用它分池），横轴=目标因子；色块=ΔIC(高池−低池)。灰点=样本外未复现，不建议采信</span></h2>
+    <div class="legend" id="matrixLegend">
+      <label><input type="radio" name="mk" value="stable" checked> 仅显示稳定配对</label>
+      <label><input type="radio" name="mk" value="all"> 显示全部（含噪声，用于对照）</label>
+    </div>
+    <div id="matrix" class="matrix"></div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2 id="barTitle">三档池内IC</h2>
+      <div id="barChart" class="chart"></div>
+      <div id="barHint" class="qsub"></div>
+    </div>
+    <div class="card">
+      <h2>样本外复现图 <span class="hint">横轴=前半样本ΔIC，纵轴=后半样本ΔIC；落在同一象限才可信</span></h2>
+      <div id="scatter" class="chart"></div>
+    </div>
+  </section>
+
+  <section class="card wide note">
+    <h2>方法与边界</h2>
+    <ul>
+      <li><b>ΔIC</b>：每日按条件因子C把全市场分三档，在档内计算目标因子T对未来<b>20日</b>收益的 RankIC，取高档减低档，再对250个交易日求均值与配对t值。</li>
+      <li><b>稳定判据</b>：把一年拆成前后两半分别重算，<b>两半同号且 |t|&gt;3</b> 才判定为稳定；FDR(Benjamini-Hochberg) q 值一并给出。</li>
+      <li><b>为什么必须先复现</b>：本次全部306个配对中，FDR q&lt;0.10 通过的有 <b id="nFdr">-</b> 个（58%），但前后半ΔIC<b>同号率仅 <span id="sameRate">-</span></b>——绝大多数“显著”是噪声，因此本页只把复现过的结论排在前面。</li>
+      <li>条件分组是<b>按条件因子排序三等分</b>，非按市值绝对规模；组内IC仍受其他风格暴露影响（本页未对条件池再做行业/市值中性化）。</li>
+      <li>所有净值/IC统计未计交易费用、未剔除涨跌停与流动性约束；微盘、冷门池实盘容量极小，仅可作市场冷暖参考，<b>不构成投资建议</b>。</li>
+    </ul>
+  </section>
+</main>
+<script src="cond.js?v=2"></script>
+</body>
+</html>
